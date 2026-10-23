@@ -4,7 +4,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.DriverManager;
 
-public class DbConfig {
+public class ConnectionManager {
+    private ConnectionManager() {}
+
     private static String require(String name) {
         String value = System.getenv(name);
         if(value == null || value.isBlank())

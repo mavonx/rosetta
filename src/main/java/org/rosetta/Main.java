@@ -5,7 +5,7 @@ import java.sql.SQLException;
 
 public class Main {
     public static void main(String[] args) {
-        try(Connection connection = DbConfig.getConnection()) {
+        try(Connection connection = ConnectionManager.getConnection()) {
             System.out.println("Connected to: " + connection.getMetaData().getDatabaseProductName());
             System.out.println("Version: " + connection.getMetaData().getDatabaseProductVersion());
             System.out.println("Database: " + connection.getCatalog());
