@@ -3,13 +3,10 @@ package org.rosetta.repositories;
 import org.rosetta.model.User;
 import org.rosetta.ConnectionManager;
 
+import java.sql.*;
 import java.util.List;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.Optional;
 import java.util.ArrayList;
-import java.sql.Connection;
-import java.sql.SQLException;
 
 public class UserRepository {
     public List<User> findAll() {
@@ -84,18 +81,20 @@ public class UserRepository {
     public Optional<User> findByEmail(String email) {
         try(
             Connection connection = ConnectionManager.getConnection();
-            Statement st = connection.createStatement();
-            ResultSet rs = st.executeQuery("SELECT id, name, email, password FROM users WHERE email = '" + email + "'");
+            PreparedStatement ps = connection.prepareStatement("SELECT id, name, email, password FROM users WHERE email = ?");
         ) {
-            if(rs.next()) {
-                return Optional.of(
-                    new User(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getString("email"),
-                        rs.getString("password")
-                    )
-                );
+            ps.setString(1, email);
+            try(ResultSet rs = ps.executeQuery()) {
+                if(rs.next()) {
+                    return Optional.of(
+                            new User(
+                                rs.getInt("id"),
+                                rs.getString("name"),
+                                rs.getString("email"),
+                                rs.getString("password")
+                            )
+                    );
+                }
             }
         } catch(SQLException e) {
             throw new RuntimeException("Operation failed", e);
@@ -106,16 +105,20 @@ public class UserRepository {
     public User save(User user) {
         try(
             Connection connection = ConnectionManager.getConnection();
-            Statement st = connection.createStatement();
-            ResultSet rs = st.executeQuery("INSERT INTO users (name, email, password) VALUES ('" + user.getName() + "', '" + user.getEmail() + "', '" + user.getPassword() + "') RETURNING id, name, email, password");
+            PreparedStatement ps = connection.prepareStatement("INSERT INTO users (name, email, password) VALUES (?, ?, ?) RETURNING id, name, email, password");
         ) {
-            rs.next();
-            return new User(
-                rs.getInt("id"),
-                rs.getString("name"),
-                rs.getString("email"),
-                rs.getString("password")
-            );
+            ps.setString(1, user.getName());
+            ps.setString(2, user.getEmail());
+            ps.setString(3, user.getPassword());
+            try(ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return new User(
+                    rs.getInt("id"),
+                    rs.getString("name"),
+                    rs.getString("email"),
+                    rs.getString("password")
+                );
+            }
         } catch(SQLException e) {
             throw new RuntimeException("Operation failed", e);
         }
