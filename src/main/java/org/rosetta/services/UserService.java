@@ -5,7 +5,11 @@ import org.mindrot.jbcrypt.BCrypt;
 import org.rosetta.repositories.UserRepository;
 
 public class UserService {
-    private final UserRepository userRepository = new UserRepository();
+    private final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     public User register(User user) {
         String normalizedEmail = user.getEmail().toLowerCase();
