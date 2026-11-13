@@ -4,6 +4,7 @@ import org.rosetta.model.Product;
 import org.rosetta.repositories.ProductRepository;
 import org.rosetta.repositories.CategoryRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.math.BigDecimal;
 
@@ -17,7 +18,8 @@ public class ProductService {
     }
 
     public List<Product> getAll() {
-        return productRepository.findAll();
+//        return productRepository.findAll();
+        return new ArrayList<>();
     }
 
     public List<Product> getAll(int page, int size) {

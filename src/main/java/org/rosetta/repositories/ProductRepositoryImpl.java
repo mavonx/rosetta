@@ -2,168 +2,93 @@ package org.rosetta.repositories;
 
 import org.rosetta.model.Product;
 import org.rosetta.ConnectionManager;
+import org.rosetta.repositories.mapping.RowMappers;
 
 import java.sql.*;
 import java.util.List;
 import java.util.Optional;
-import java.util.ArrayList;
+
+import static org.rosetta.repositories.mapping.RowMappers.*;
 
 public class ProductRepositoryImpl implements ProductRepository {
     @Override
-    public List<Product> findAll() {
-        List<Product> products = new ArrayList<>();
-        try(
-            Connection connection = ConnectionManager.getConnection();
-            Statement st = connection.createStatement();
-            ResultSet rs = st.executeQuery("SELECT id, name, price, stock, category_id FROM products")
-        ) {
-            while(rs.next()) {
-                products.add(new Product(
-                    rs.getInt("id"),
-                    rs.getString("name"),
-                    rs.getBigDecimal("price"),
-                    rs.getInt("stock"),
-                    rs.getInt("category_id")
-                ));
-            }
-        } catch(SQLException e) {
-            throw new RuntimeException("Operation failed", e);
-        }
-        return products;
-    }
-
-    @Override
     public List<Product> findAll(int page, int size) {
-        if(page < 1 || size < 1)
-            throw new IllegalArgumentException("Page and size must be at least 1");
-
-        int offset = (page - 1) * size;
-
-        List<Product> products = new ArrayList<>();
+        long offset = (page - 1L) * size;
         try(
             Connection connection = ConnectionManager.getConnection();
-            Statement st = connection.createStatement();
-            ResultSet rs = st.executeQuery("SELECT id, name, price, stock, category_id FROM products ORDER BY id LIMIT " + size + " OFFSET " + offset)
+            PreparedStatement ps = connection.prepareStatement("SELECT " + PRODUCT_COLUMNS + " FROM products ORDER BY id LIMIT ? OFFSET ?")
         ) {
-            while(rs.next()) {
-                products.add(new Product(
-                    rs.getInt("id"),
-                    rs.getString("name"),
-                    rs.getBigDecimal("price"),
-                    rs.getInt("stock"),
-                    rs.getInt("category_id")
-                ));
-            }
+            ps.setInt(1, size);
+            ps.setLong(2, offset);
+            return toList(ps, RowMappers::toProduct);
         } catch(SQLException e) {
             throw new RuntimeException("Operation failed", e);
         }
-        return products;
     }
 
     @Override
     public List<Product> findByName(String name) {
-        List<Product> products = new ArrayList<>();
         try(
             Connection connection = ConnectionManager.getConnection();
-            PreparedStatement ps = connection.prepareStatement("SELECT id, name, price, stock, category_id FROM products WHERE name ILIKE ? ORDER BY id")
+            PreparedStatement ps = connection.prepareStatement("SELECT " + PRODUCT_COLUMNS + " FROM products WHERE name ILIKE ? ORDER BY id")
         ) {
             ps.setString(1, "%" + name + "%");
-            try(ResultSet rs = ps.executeQuery()) {
-                while(rs.next()) {
-                    products.add(new Product(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getBigDecimal("price"),
-                        rs.getInt("stock"),
-                        rs.getInt("category_id")
-                    ));
-                }
-            }
+            return toList(ps, RowMappers::toProduct);
         } catch(SQLException e) {
             throw new RuntimeException("Operation failed", e);
         }
-        return products;
     }
 
     @Override
     public List<Product> findByCategory(int categoryId) {
-        List<Product> products = new ArrayList<>();
         try(
             Connection connection = ConnectionManager.getConnection();
-            Statement st = connection.createStatement();
-            ResultSet rs = st.executeQuery("SELECT id, name, price, stock, category_id FROM products WHERE category_id = " + categoryId)
+            PreparedStatement ps = connection.prepareStatement("SELECT " + PRODUCT_COLUMNS + " FROM products WHERE category_id = ? ORDER BY id")
         ) {
-            while(rs.next()) {
-                products.add(new Product(
-                    rs.getInt("id"),
-                    rs.getString("name"),
-                    rs.getBigDecimal("price"),
-                    rs.getInt("stock"),
-                    rs.getInt("category_id")
-                ));
-            }
+            ps.setInt(1, categoryId);
+            return toList(ps, RowMappers::toProduct);
         } catch(SQLException e) {
             throw new RuntimeException("Operation failed", e);
         }
-        return products;
     }
 
     @Override
     public Optional<Product> findById(int id) {
         try(
             Connection connection = ConnectionManager.getConnection();
-            Statement st = connection.createStatement();
-            ResultSet rs = st.executeQuery("SELECT id, name, price, stock, category_id FROM products WHERE id = " + id)
+            PreparedStatement ps = connection.prepareStatement("SELECT " + PRODUCT_COLUMNS + " FROM products WHERE id = ?")
         ) {
-            if(rs.next()) {
-                return Optional.of(
-                    new Product(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getBigDecimal("price"),
-                        rs.getInt("stock"),
-                        rs.getInt("category_id")
-                    )
-                );
-            }
+            ps.setInt(1, id);
+            return toOptional(ps, RowMappers::toProduct);
         } catch(SQLException e) {
             throw new RuntimeException("Operation failed", e);
         }
-        return Optional.empty();
     }
 
     @Override
     public Product save(Product product) {
         try(
             Connection connection = ConnectionManager.getConnection();
-            PreparedStatement ps = connection.prepareStatement("INSERT INTO products (name, price, stock, category_id) VALUES (?, ?, ?, ?) RETURNING id, name, price, stock, category_id")
+            PreparedStatement ps = connection.prepareStatement("INSERT INTO products (name, price, stock, category_id) VALUES (?, ?, ?, ?) RETURNING " + PRODUCT_COLUMNS)
         ) {
             ps.setString(1, product.getName());
             ps.setBigDecimal(2, product.getPrice());
             ps.setInt(3, product.getStock());
             ps.setInt(4, product.getCategoryId());
-            try(ResultSet rs = ps.executeQuery()) {
-                rs.next();
-                return new Product(
-                    rs.getInt("id"),
-                    rs.getString("name"),
-                    rs.getBigDecimal("price"),
-                    rs.getInt("stock"),
-                    rs.getInt("category_id")
-                );
-            }
+            return toSingle(ps, RowMappers::toProduct);
         } catch(SQLException e) {
             throw new RuntimeException("Operation failed", e);
         }
     }
 
     @Override
-    public void delete(int id) {
+    public boolean delete(int id) {
         try(
             Connection connection = ConnectionManager.getConnection();
-            Statement st = connection.createStatement()
+            PreparedStatement ps = connection.prepareStatement("DELETE FROM products WHERE id = ?")
         ) {
-            st.executeUpdate("DELETE FROM products WHERE id = " + id);
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
         } catch(SQLException e) {
             throw new RuntimeException("Operation failed", e);
         }
