@@ -1,5 +1,6 @@
 package org.rosetta.repositories.mapping;
 
+import org.rosetta.model.Category;
 import org.rosetta.model.Product;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import java.sql.PreparedStatement;
 
 public class RowMappers {
     public static final String PRODUCT_COLUMNS = "id, name, price, stock, category_id";
+    public static final String CATEGORY_COLUMNS = "id, name";
 
     private RowMappers() {}
 
@@ -21,6 +23,13 @@ public class RowMappers {
             rs.getBigDecimal("price"),
             rs.getInt("stock"),
             rs.getInt("category_id")
+        );
+    }
+
+    public static Category toCategory(ResultSet rs) throws SQLException {
+        return new Category(
+            rs.getInt("id"),
+            rs.getString("name")
         );
     }
 

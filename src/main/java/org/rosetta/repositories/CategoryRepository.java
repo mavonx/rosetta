@@ -7,8 +7,8 @@ import java.util.Optional;
 
 public interface CategoryRepository {
     List<Category> findAll();
-    Optional<Category> findById(int id);
     Optional<Category> findByName(String name);
+    Optional<Category> findById(int id);
     Category save(Category category);
-    void delete(int id);
+    boolean delete(int id);
 }
