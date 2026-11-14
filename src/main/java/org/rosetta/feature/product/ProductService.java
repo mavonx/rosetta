@@ -1,7 +1,5 @@
-package org.rosetta.services;
+package org.rosetta.feature.product;
 
-import org.rosetta.model.Product;
-import org.rosetta.repositories.ProductRepository;
 import org.rosetta.repositories.CategoryRepository;
 
 import java.util.ArrayList;

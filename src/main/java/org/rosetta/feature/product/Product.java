@@ -1,4 +1,4 @@
-package org.rosetta.model;
+package org.rosetta.feature.product;
 
 import java.math.BigDecimal;
 

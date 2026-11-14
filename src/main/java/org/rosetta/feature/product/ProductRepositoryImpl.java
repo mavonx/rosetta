@@ -1,6 +1,5 @@
-package org.rosetta.repositories;
+package org.rosetta.feature.product;
 
-import org.rosetta.model.Product;
 import org.rosetta.ConnectionManager;
 
 import java.sql.*;

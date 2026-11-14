@@ -1,6 +1,4 @@
-package org.rosetta.repositories;
-
-import org.rosetta.model.Product;
+package org.rosetta.feature.product;
 
 import java.util.List;
 import java.util.Optional;
