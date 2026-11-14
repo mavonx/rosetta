@@ -1,4 +1,4 @@
-package org.rosetta.repositories.mapping;
+package org.rosetta.common.persistence;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

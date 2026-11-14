@@ -1,7 +1,4 @@
-package org.rosetta.repositories.mapping;
-
-import org.rosetta.model.Category;
-import org.rosetta.model.Product;
+package org.rosetta.common.persistence;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,28 +7,8 @@ import java.util.ArrayList;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 
-public class RowMappers {
-    public static final String PRODUCT_COLUMNS = "id, name, price, stock, category_id";
-    public static final String CATEGORY_COLUMNS = "id, name";
-
+public final class RowMappers {
     private RowMappers() {}
-
-    public static Product toProduct(ResultSet rs) throws SQLException {
-        return new Product(
-            rs.getInt("id"),
-            rs.getString("name"),
-            rs.getBigDecimal("price"),
-            rs.getInt("stock"),
-            rs.getInt("category_id")
-        );
-    }
-
-    public static Category toCategory(ResultSet rs) throws SQLException {
-        return new Category(
-            rs.getInt("id"),
-            rs.getString("name")
-        );
-    }
 
     public static <T> List<T> toList(PreparedStatement ps, RowMapper<T> mapper) throws SQLException {
         List<T> result = new ArrayList<>();

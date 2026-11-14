@@ -2,15 +2,26 @@ package org.rosetta.repositories;
 
 import org.rosetta.model.Product;
 import org.rosetta.ConnectionManager;
-import org.rosetta.repositories.mapping.RowMappers;
 
 import java.sql.*;
 import java.util.List;
 import java.util.Optional;
 
-import static org.rosetta.repositories.mapping.RowMappers.*;
+import static org.rosetta.common.persistence.RowMappers.*;
 
 public class ProductRepositoryImpl implements ProductRepository {
+    private static final String PRODUCT_COLUMNS = "id, name, price, stock, category_id";
+
+    private static Product toProduct(ResultSet rs) throws SQLException {
+        return new Product(
+            rs.getInt("id"),
+            rs.getString("name"),
+            rs.getBigDecimal("price"),
+            rs.getInt("stock"),
+            rs.getInt("category_id")
+        );
+    }
+
     @Override
     public List<Product> findAll(int page, int size) {
         long offset = (page - 1L) * size;
@@ -20,7 +31,7 @@ public class ProductRepositoryImpl implements ProductRepository {
         ) {
             ps.setInt(1, size);
             ps.setLong(2, offset);
-            return toList(ps, RowMappers::toProduct);
+            return toList(ps, ProductRepositoryImpl::toProduct);
         } catch(SQLException e) {
             throw new RuntimeException("Operation failed", e);
         }
@@ -33,7 +44,7 @@ public class ProductRepositoryImpl implements ProductRepository {
             PreparedStatement ps = connection.prepareStatement("SELECT " + PRODUCT_COLUMNS + " FROM products WHERE name ILIKE ? ORDER BY id")
         ) {
             ps.setString(1, "%" + name + "%");
-            return toList(ps, RowMappers::toProduct);
+            return toList(ps, ProductRepositoryImpl::toProduct);
         } catch(SQLException e) {
             throw new RuntimeException("Operation failed", e);
         }
@@ -46,7 +57,7 @@ public class ProductRepositoryImpl implements ProductRepository {
             PreparedStatement ps = connection.prepareStatement("SELECT " + PRODUCT_COLUMNS + " FROM products WHERE category_id = ? ORDER BY id")
         ) {
             ps.setInt(1, categoryId);
-            return toList(ps, RowMappers::toProduct);
+            return toList(ps, ProductRepositoryImpl::toProduct);
         } catch(SQLException e) {
             throw new RuntimeException("Operation failed", e);
         }
@@ -59,7 +70,7 @@ public class ProductRepositoryImpl implements ProductRepository {
             PreparedStatement ps = connection.prepareStatement("SELECT " + PRODUCT_COLUMNS + " FROM products WHERE id = ?")
         ) {
             ps.setInt(1, id);
-            return toOptional(ps, RowMappers::toProduct);
+            return toOptional(ps, ProductRepositoryImpl::toProduct);
         } catch(SQLException e) {
             throw new RuntimeException("Operation failed", e);
         }
@@ -75,7 +86,7 @@ public class ProductRepositoryImpl implements ProductRepository {
             ps.setBigDecimal(2, product.getPrice());
             ps.setInt(3, product.getStock());
             ps.setInt(4, product.getCategoryId());
-            return toSingle(ps, RowMappers::toProduct);
+            return toSingle(ps, ProductRepositoryImpl::toProduct);
         } catch(SQLException e) {
             throw new RuntimeException("Operation failed", e);
         }

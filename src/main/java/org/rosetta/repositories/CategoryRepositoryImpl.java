@@ -2,22 +2,30 @@ package org.rosetta.repositories;
 
 import org.rosetta.model.Category;
 import org.rosetta.ConnectionManager;
-import org.rosetta.repositories.mapping.RowMappers;
 
 import java.sql.*;
 import java.util.List;
 import java.util.Optional;
 
-import static org.rosetta.repositories.mapping.RowMappers.*;
+import static org.rosetta.common.persistence.RowMappers.*;
 
 public class CategoryRepositoryImpl implements CategoryRepository {
+    private static final String CATEGORY_COLUMNS = "id, name";
+
+    private static Category toCategory(ResultSet rs) throws SQLException {
+        return new Category(
+            rs.getInt("id"),
+            rs.getString("name")
+        );
+    }
+
     @Override
     public List<Category> findAll() {
         try(
             Connection connection = ConnectionManager.getConnection();
             PreparedStatement ps = connection.prepareStatement("SELECT " + CATEGORY_COLUMNS + " FROM categories ORDER BY id")
         ) {
-            return toList(ps, RowMappers::toCategory);
+            return toList(ps, CategoryRepositoryImpl::toCategory);
         } catch(SQLException e) {
             throw new RuntimeException("Operation failed", e);
         }
@@ -30,7 +38,7 @@ public class CategoryRepositoryImpl implements CategoryRepository {
             PreparedStatement ps = connection.prepareStatement("SELECT " + CATEGORY_COLUMNS + " FROM categories WHERE name = ?");
         ) {
             ps.setString(1, name);
-            return toOptional(ps, RowMappers::toCategory);
+            return toOptional(ps, CategoryRepositoryImpl::toCategory);
         } catch(SQLException e) {
             throw new RuntimeException("Operation failed", e);
         }
@@ -43,7 +51,7 @@ public class CategoryRepositoryImpl implements CategoryRepository {
             PreparedStatement ps = connection.prepareStatement("SELECT " + CATEGORY_COLUMNS + " FROM categories WHERE id = ?")
         ) {
             ps.setInt(1, id);
-            return toOptional(ps, RowMappers::toCategory);
+            return toOptional(ps, CategoryRepositoryImpl::toCategory);
         } catch(SQLException e) {
             throw new RuntimeException("Operation failed", e);
         }
@@ -56,7 +64,7 @@ public class CategoryRepositoryImpl implements CategoryRepository {
             PreparedStatement ps = connection.prepareStatement("INSERT INTO categories (name) VALUES (?) RETURNING " + CATEGORY_COLUMNS)
         ) {
             ps.setString(1, category.getName());
-            return toSingle(ps, RowMappers::toCategory);
+            return toSingle(ps, CategoryRepositoryImpl::toCategory);
         } catch(SQLException e) {
             throw new RuntimeException("Operation failed", e);
         }
